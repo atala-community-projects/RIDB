@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -58,6 +59,83 @@ pub struct Operation {
     /// The indexes related to the operation.
     pub(crate) indexes: Vec<String>
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct KeyValClause {
+    pub key: String,
+    pub value: Value
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ExpressionTreeClause {
+    pub operator: String,
+    pub expressions: Vec<Expression>
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Clause {
+    KeyVal(KeyValClause),
+    Expression(ExpressionTreeClause),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Value {
+    Leaf(LeafValue),
+    Operators(Vec<Operator>),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Operator {
+    List(ListOperator),
+    Value(ValueOperator),
+    ExpressionOperator(OperatorExpressionOperator),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ListOperator {
+    pub operator: String,
+    pub values: Vec<LeafValue>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ValueOperator {
+    pub operator: String,
+    pub value: LeafValue,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OperatorExpressionOperator {
+    pub operator: String,
+    pub operators: Vec<Operator>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LeafValue {
+    pub value: serde_json::Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Expression {
+    pub clauses: Vec<Clause>
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[wasm_bindgen]
+pub struct Query {
+    pub(crate) expression: Expression
+}
+
+#[wasm_bindgen]
+impl Query {
+
+    #[wasm_bindgen(constructor)]
+    pub fn from() -> Query {
+        todo!()
+    }
+
+
+}
+
 
 #[wasm_bindgen]
 impl Operation {

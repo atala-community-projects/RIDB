@@ -8,6 +8,7 @@ use crate::query::{Operation, OpType};
 use crate::schema::property_type::PropertyType;
 use crate::schema::Schema;
 use crate::storage::internals::storage_internal::StorageInternal;
+
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
 /**
@@ -200,7 +201,10 @@ impl Internals {
 
     /// Placeholder for finding a document by its ID.
     #[wasm_bindgen]
-    pub async fn find_document_by_id() {}
+    pub async fn find_document_by_id(&self, primary_key: JsValue) -> Result<JsValue, JsValue>{
+        let result = self.internal.findDocument_by_id(primary_key).await;
+        todo!()
+    }
 
     /// Placeholder for counting documents in the storage system.
     #[wasm_bindgen]

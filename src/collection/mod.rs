@@ -78,7 +78,7 @@ export class Collection<T extends SchemaType> {
      * @param id - The ID of the document to find.
      * @returns A promise that resolves to the found document.
      */
-    findOne(id: string): Promise<Doc<T>>;
+    findById(id: string): Promise<Doc<T>>;
 
     /**
      * Updates a document in the collection by its ID.
@@ -155,9 +155,9 @@ impl Collection {
     /// Finds and returns a single document in the collection by its ID.
     ///
     /// This function is asynchronous.
-    #[wasm_bindgen(js_name="findOne")]
-    pub async fn find_one(&self, _primary_key: String) {
-        todo!()
+    #[wasm_bindgen(js_name="findById")]
+    pub async fn find_by_id(&self, primary_key: JsValue) -> Result<JsValue, JsValue>{
+        self.internals.find_document_by_id(primary_key).await
     }
 
     /// Updates a document in the collection with the given data.
@@ -169,7 +169,7 @@ impl Collection {
     /// * `document` - A `JsValue` representing the partial document to update.
     #[wasm_bindgen]
     pub async fn update(&self, _document: JsValue) -> Result<JsValue, JsValue> {
-        /* A document cannot get */
+        //write operation to update a single entry
         todo!()
     }
 
@@ -190,7 +190,8 @@ impl Collection {
     ///
     /// This function is asynchronous.
     #[wasm_bindgen]
-    pub async fn delete(&self) {
+    pub async fn delete(&self, primary_key: JsValue) {
+        //write operation to remove a single entry
         todo!()
     }
 }

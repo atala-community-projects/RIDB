@@ -4,10 +4,12 @@ pub mod property_type;
 pub mod property;
 
 use std::collections::HashMap;
+use js_sys::JSON;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::{from_value, to_value};
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
+use wasm_bindgen_test::{console_log, wasm_bindgen_test};
 use crate::error::RIDBError;
 use crate::schema::property::Property;
 
@@ -234,5 +236,66 @@ impl Schema {
         to_value(&self.properties).map_err(|e| JsValue::from_str(&format!("{:?}", e)))
     }
 
+}
+
+
+#[cfg(feature = "browser")]
+use wasm_bindgen_test::{wasm_bindgen_test_configure};
+
+#[cfg(feature = "browser")]
+wasm_bindgen_test_configure!(run_in_browser);
+
+
+
+#[wasm_bindgen_test]
+fn test_schema_creation() {
+    let schema_js = r#"{
+        "version": 1,
+        "primaryKey": "id",
+        "type": "object",
+        "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "age": {"type": "number"}
+        }
+    }"#;
+    let schema_value = JSON::parse(&schema_js).unwrap();
+    let schema = Schema::create(schema_value).unwrap();
+    assert_eq!(schema.get_version(), 1);
+    assert_eq!(schema.get_primary_key(), "id");
+    assert_eq!(schema.get_schema_type(), "object");
+}
+
+#[wasm_bindgen_test]
+fn test_schema_validation() {
+    let schema_js = r#"{
+        "version": 1,
+        "primaryKey": "id",
+        "type": "object",
+        "properties": {
+            "id": {"type": "string"}
+        }
+    }"#;
+    let schema_value = JSON::parse(schema_js).unwrap();
+    let schema = Schema::create(schema_value).unwrap();
+
+    assert!(schema.is_valid().is_ok());
+}
+
+
+#[wasm_bindgen_test]
+fn test_invalid_schema() {
+    let schema_js = r#"{
+        "version": 1,
+        "primaryKey": "id",
+        "type": "invalid",
+        "properties": {
+            "id": {"type": "string"}
+        }
+    }"#;
+    let schema_value = JSON::parse(schema_js).unwrap();
+    let result = Schema::create(schema_value);
+
+    assert!(result.is_err());
 }
 

@@ -1,8 +1,16 @@
-use js_sys::Object;
 use wasm_bindgen::JsValue;
-use wasm_bindgen::prelude::wasm_bindgen;
 use crate::query::Operation;
-use crate::schema::Schema;
+use js_sys::Object;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+pub trait StorageBase {
+    async fn write(&mut self, op: &Operation) -> Result<JsValue, JsValue>;
+    async fn query(&self) -> Result<JsValue, JsValue>;
+    async fn find_document_by_id(&self, primary_key:JsValue) -> Result<JsValue, JsValue>;
+    async fn count(&self) -> Result<JsValue, JsValue>;
+    async fn remove(&self) -> Result<JsValue, JsValue>;
+    async fn close(&self) -> Result<JsValue, JsValue>;
+}
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
@@ -37,41 +45,12 @@ export type StorageModule = {
 };
 "#;
 
+
 #[wasm_bindgen]
 extern "C" {
-    #[derive(Clone, Default)]
-    pub type StorageInternal;
-
     #[derive(Clone, Default)]
     pub type StorageModule;
 
     #[wasm_bindgen(method, catch, js_name="createStorage")]
     pub fn create_storage(this: &StorageModule, records: &Object) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(constructor)]
-    pub fn new(name: &JsValue, schema: &JsValue) -> StorageInternal;
-
-    #[wasm_bindgen(method, getter = schema)]
-    pub fn schema(this: &StorageInternal) -> Schema;
-
-    #[wasm_bindgen(method, getter = name)]
-    pub fn name(this: &StorageInternal) -> String;
-
-    #[wasm_bindgen(method, catch)]
-    pub async fn write(this: &StorageInternal, op: Operation) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(method, catch)]
-    pub async fn query(this: &StorageInternal) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(method, catch, js_name="findDocumentById")]
-    pub async fn findDocument_by_id(this: &StorageInternal, primary_key:JsValue) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(method, catch)]
-    pub async fn count(this: &StorageInternal) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(method, catch)]
-    pub async fn remove(this: &StorageInternal) -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(method, catch)]
-    pub async fn close(this: &StorageInternal) -> Result<JsValue, JsValue>;
 }

@@ -2,6 +2,7 @@
 extern crate wasm_bindgen_test;
 
 use std::collections::HashMap;
+use js_sys::JSON;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::JsValue;
@@ -255,6 +256,7 @@ impl Property {
 
 #[cfg(feature = "browser")]
 use wasm_bindgen_test::{wasm_bindgen_test_configure};
+use wasm_bindgen_test::wasm_bindgen_test;
 
 #[cfg(feature = "browser")]
 wasm_bindgen_test_configure!(run_in_browser);
@@ -529,4 +531,46 @@ mod tests {
         }
     }
 
+}
+
+
+#[wasm_bindgen_test]
+fn test_property_creation() {
+    let property_js = r#"{
+        "type": "string",
+        "maxLength": 50,
+        "minLength": 1
+    }"#;
+    let property_value = JSON::parse(property_js).unwrap();
+    let property = serde_wasm_bindgen::from_value::<Property>(property_value).unwrap();
+
+    assert_eq!(property.property_type(), PropertyType::String);
+    assert_eq!(property.max_length().unwrap(), JsValue::from(50));
+    assert_eq!(property.min_length().unwrap(), JsValue::from(1));
+}
+
+#[wasm_bindgen_test]
+fn test_property_validation() {
+    let property_js = r#"{
+        "type": "string",
+        "maxLength": 50,
+        "minLength": 1
+    }"#;
+    let property_value = JSON::parse(property_js).unwrap();
+    let property = serde_wasm_bindgen::from_value::<Property>(property_value).unwrap();
+
+    assert!(property.is_valid().is_ok());
+}
+
+#[wasm_bindgen_test]
+fn test_invalid_property() {
+    let property_js = r#"{
+        "type": "string",
+        "maxLength": 10,
+        "minLength": 20
+    }"#;
+    let property_value = JSON::parse(property_js).unwrap();
+    let property = serde_wasm_bindgen::from_value::<Property>(property_value).unwrap();
+
+    assert!(property.is_valid().is_err());
 }

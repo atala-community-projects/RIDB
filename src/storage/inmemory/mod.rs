@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use js_sys::{Object, Reflect};
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
 use crate::query::{Operation, OpType};
 use crate::schema::Schema;
+use crate::storage::base::StorageBase;
 use crate::storage::internals::base_storage::BaseStorage;
 
 #[wasm_bindgen(typescript_custom_section)]
@@ -21,65 +23,28 @@ export class InMemory<T extends SchemaType> extends BaseStorage<T> {
 "#;
 
 
+
 #[wasm_bindgen(skip_typescript)]
 pub struct InMemory{
     pub(crate) base: BaseStorage,
-    pub(crate) by_index: Object
+    pub(crate) by_index: HashMap<
+        String, HashMap<
+            String, JsValue
+        >
+    >
 }
 
-pub trait StorageOperations {
-    fn add_index(&mut self, name: String, row: JsValue);
-    async fn write(&mut self, op: &Operation) -> Result<JsValue, JsValue>;
-    async fn query(&self) -> Result<JsValue, JsValue>;
-    async fn find_document_by_id(&self) -> Result<JsValue, JsValue>;
-    async fn count(&self) -> Result<JsValue, JsValue>;
-    async fn remove(&self) -> Result<JsValue, JsValue>;
-    async fn close(&self) -> Result<JsValue, JsValue>;
-}
 
-impl StorageOperations for InMemory {
-    fn add_index(&mut self, name: String, row: JsValue) {
-        let index_key = JsValue::from(name);
-        let primary_key = JsValue::from(&self.base.schema.primary_key);
-        let primary_key_value = Reflect::get(&row, &JsValue::from(&primary_key)).expect("Cannot extract primary key");
-        let obj:Object = match Reflect::get(&self.by_index, &index_key) {
-            Ok(object) => match object.is_undefined() || object.is_null() {
-                true => Object::new(),
-                false => Object::from(object)
-            },
-            Err(_) => Object::new()
-        };
-        Reflect::set(
-            &obj,
-            &primary_key_value,
-            &row
-        ).expect("Cannot add row to object");
-        Reflect::set(
-            &self.by_index,
-            &index_key,
-            &obj
-        ).expect("Cannot restore index documents");
-    }
-
+impl StorageBase for InMemory {
     async fn write(&mut self, op: &Operation) -> Result<JsValue, JsValue> {
-        match &op.op_type {
-            OpType::CREATE => {
-                let indexes = &op.indexes;
-                for index in indexes {
-                    let collection_index = format!("{}+{}", self.base.name, index);
-                    self.add_index(collection_index, op.data.clone());
-                }
-                Ok(op.data.clone())
-            },
-            _ => Err(JsValue::from_str("Optype is not supported"))
-        }
+        todo!()
     }
 
     async fn query(&self) -> Result<JsValue, JsValue> {
         todo!()
     }
 
-    async  fn find_document_by_id(&self) -> Result<JsValue, JsValue> {
+    async  fn find_document_by_id(&self, primary_key:JsValue) -> Result<JsValue, JsValue> {
         todo!()
     }
 
@@ -108,7 +73,7 @@ impl InMemory {
             Ok(base) => Ok(
                 InMemory {
                     base,
-                    by_index: Object::new()
+                    by_index: HashMap::new()
                 }
             ),
             Err(e) => Err(e)
@@ -117,10 +82,19 @@ impl InMemory {
 
     #[wasm_bindgen(getter)]
     pub fn by_index(&self) -> Result<JsValue, JsValue> {
-        let by_index_object = self.by_index.clone();
-        Ok(
-            JsValue::from(by_index_object)
-        )
+        let outer_obj = Object::new();
+
+        for (outer_key, inner_map) in &self.by_index {
+            let inner_obj = Object::new();
+            for (inner_key, value) in inner_map {
+                Reflect::set(&inner_obj, &JsValue::from_str(inner_key), value)
+                    .map_err(|_| JsValue::from_str("Failed to set inner object property"))?;
+            }
+            Reflect::set(&outer_obj, &JsValue::from_str(outer_key), &JsValue::from(inner_obj))
+                .map_err(|_| JsValue::from_str("Failed to set outer object property"))?;
+        }
+
+        Ok(JsValue::from(outer_obj))
     }
 
     #[wasm_bindgen(getter)]
@@ -144,8 +118,8 @@ impl InMemory {
     }
 
     #[wasm_bindgen(js_name = "findDocumentById")]
-    pub async fn find_document_by_id_js(&self) -> Result<JsValue, JsValue> {
-        self.find_document_by_id().await
+    pub async fn find_document_by_id_js(&self, primary_key:JsValue) -> Result<JsValue, JsValue> {
+        self.find_document_by_id(primary_key).await
     }
 
     #[wasm_bindgen(js_name = "count")]

@@ -4,7 +4,7 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
 use crate::collection::Collection;
 use crate::error::RIDBError;
-use crate::storage::internals::storage_internal::{StorageModule};
+use crate::storage::internals::storage_internal::StorageModule;
 use crate::storage::Storage;
 
 #[wasm_bindgen(typescript_custom_section)]

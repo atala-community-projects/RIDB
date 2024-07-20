@@ -1,5 +1,6 @@
 pub mod internals;
 pub mod inmemory;
+mod base;
 
 use std::collections::HashMap;
 use js_sys::{ Object, Reflect};
