@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@esbuild-plugins/node-resolve": "^0.2.2",
-    "@hyperledger/identus-edge-agent-sdk": "file:../../../iohk/atala-prism-wallet-sdk-ts",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/exec": "^6.0.3",
@@ -67,5 +66,8 @@
     "vite-plugin-wasm": "^3.3.0",
     "vitest": "^1.6.0",
     "webdriverio": "^9.0.9"
+  },
+  "peerDependencies": {
+    "@hyperledger/identus-edge-agent-sdk": "file:../../../iohk/atala-prism-wallet-sdk-ts"
   }
 }

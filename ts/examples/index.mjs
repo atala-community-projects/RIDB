@@ -5,9 +5,7 @@ import SDK from '@hyperledger/identus-edge-agent-sdk'
 
 import {RIDB} from '../build/esm/index.mjs';
 
-const mediatorDID = SDK.Domain.DID.fromString(
- "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7y.Vz6Mkhh1e5CEYYq6JBUcTZ6Cp2ranCWRrv7Yax3Le4N59R6dd.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6Imh0dHA6Ly8xOTIuMTY4LjEuNDQ6ODA4MCIsImEiOlsiZGlkY29tbS92MiJdfX0.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6IndzOi8vMTkyLjE2OC4xLjQ0OjgwODAvd3MiLCJhIjpbImRpZGNvbW0vdjIiXX19"
-);
+const mediatorDID = "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7y.Vz6Mkhh1e5CEYYq6JBUcTZ6Cp2ranCWRrv7Yax3Le4N59R6dd.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6Imh0dHA6Ly8xOTIuMTY4LjEuNDQ6ODA4MCIsImEiOlsiZGlkY29tbS92MiJdfX0.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6IndzOi8vMTkyLjE2OC4xLjQ0OjgwODAvd3MiLCJhIjpbImRpZGNvbW0vdjIiXX19";
 
 (async () => {
 
@@ -44,19 +42,14 @@ const mediatorDID = SDK.Domain.DID.fromString(
             await collection.remove(uuid)
         }
 
-        async query(name, query) {
+        async query(name, query = {}) {
             const collection = this.collections[name]
-            const queryResponse = await collection.find(query.selector)
-            console.log("Find", name, "query", JSON.stringify(query), queryResponse.length, JSON.stringify(queryResponse))
-
-            return queryResponse
+            return collection.find(query?.selector || query)
         }
 
         async insert(name, data) {
             const collection = this.collections[name]
-            const queryResponse = await collection.create(data);
-            console.log("Adding ", name, data, "vs", queryResponse)
-            return queryResponse
+            return collection.create(data)
         }
 
         async cleanup() {
@@ -67,15 +60,12 @@ const mediatorDID = SDK.Domain.DID.fromString(
             throw new Error("Not implemented")
         }
     }
-
     const apollo = new SDK.Apollo();
     const castor = new SDK.Castor(apollo);
     const pluto =  new SDK.Pluto(
         new RIDBStore(),
         apollo
     );
-    await pluto.start();
-
     const seed = apollo.createRandomSeed().seed;
     const agent =  SDK.Agent.initialize(
         {
@@ -86,14 +76,22 @@ const mediatorDID = SDK.Domain.DID.fromString(
             seed,
         }
     );
-
-    agent.addListener(SDK.ListenerKey.MESSAGE, (messages) => {
+    agent.addListener(SDK.ListenerKey.MESSAGE, async (messages) => {
         console.log(messages);
-        debugger
+        agent.stop()
     })
-
-    console.log("Starting the database")
-
+    console.log("Starting the agent")
     await agent.start()
     console.log("Ok :)")
+    const secondaryDID = await agent.createNewPeerDID([], true);
+    const message = new SDK.BasicMessage(
+        { content: "Test Message" },
+        secondaryDID,
+        secondaryDID,
+    );
+
+
+    console.log("Sending message")
+    await agent.sendMessage(message.makeMessage());
+    console.log("OK")
 })()
