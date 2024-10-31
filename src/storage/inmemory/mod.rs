@@ -558,6 +558,7 @@ async fn test_inmemory_storage_create_operation() {
         "version": 0,
         "primaryKey": "id",
         "type": "object",
+        "required":["id", "name"],
         "properties": {
             "id": { "type": "string", "maxLength": 60 },
             "name": { "type": "string" }
@@ -631,8 +632,6 @@ async fn test_inmemory_storage_create_operation() {
     };
 
     let invalid_result = inmem.write(&invalid_op).await;
-
-
 
     assert!(invalid_result.is_err());
 

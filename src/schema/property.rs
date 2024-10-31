@@ -92,10 +92,6 @@ pub struct Property {
     #[serde(rename = "minItems", skip_serializing_if = "Option::is_none")]
     pub(crate) min_items: Option<i32>,
 
-    /// Optional required fields for object-type properties.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) required: Option<bool>,
-
     /// Optional nested properties for object-type properties.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) properties: Option<HashMap<String, Property>>,
@@ -267,7 +263,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         assert_eq!(default_property.property_type, PropertyType::String);
@@ -276,7 +271,6 @@ mod tests {
         assert!(default_property.min_items.is_none());
         assert!(default_property.max_length.is_none());
         assert!(default_property.min_length.is_none());
-        assert!(default_property.required.is_none());
         assert!(default_property.properties.is_none());
         assert!(default_property.is_valid().unwrap());
     }
@@ -290,7 +284,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         // Test default values to ensure proper initialization
@@ -300,7 +293,6 @@ mod tests {
         assert!(default_property.min_items.is_none());
         assert!(default_property.max_length.is_none());
         assert!(default_property.min_length.is_none());
-        assert!(default_property.required.is_none());
         assert!(default_property.properties.is_none());
         let result = default_property.is_valid();
         // Check the result for an error message
@@ -319,7 +311,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let default_property = Property {
@@ -329,7 +320,6 @@ mod tests {
             min_items: Some(-1),
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let result = default_property.is_valid();
@@ -348,7 +338,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
 
@@ -359,7 +348,6 @@ mod tests {
             min_items: Some(2),
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -380,7 +368,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
 
@@ -391,7 +378,6 @@ mod tests {
             min_items: Some(-1),
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -412,7 +398,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -432,7 +417,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -452,7 +436,6 @@ mod tests {
             min_items: None,
             max_length: Some(1),
             min_length: Some(2),
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -472,7 +455,6 @@ mod tests {
             min_items: None,
             max_length: Some(1),
             min_length: Some(-1),
-            required: None,
             properties: None,
         };
         let result = default_property2.is_valid();
@@ -492,7 +474,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: None,
         }.is_valid();
         // Check the result for an error message
@@ -511,7 +492,6 @@ mod tests {
             min_items: None,
             max_length: None,
             min_length: None,
-            required: None,
             properties: Some(HashMap::new()),
         }.is_valid();
         // Check the result for an error message

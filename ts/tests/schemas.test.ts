@@ -1,38 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SchemaFieldType, RIDB, BaseStorage } from "@elribonazo/ridb";
-
-
-import type { RIDBTypes } from '../build/esm';
-
-export class InMemory<T extends RIDBTypes.SchemaType> extends BaseStorage<T>   {
-    constructor(
-        public name: string,
-        public schema: RIDBTypes.Schema<T>
-    ) {
-        super(name, schema)
-    }
-
-    close(): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    
-    count(query: RIDBTypes.QueryType<T>): Promise<number> {
-        throw new Error('Method not implemented.');
-    }
-    findDocumentById(id: string): Promise<RIDBTypes.Doc<T> | null> {
-        throw new Error('Method not implemented.');
-    }
-    find(query: RIDBTypes.QueryType<T>): Promise<RIDBTypes.Doc<T>[]> {
-        throw new Error('Method not implemented.');
-    }
-    remove(id: string): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    write(op: RIDBTypes.Operation<T>): Promise<RIDBTypes.Doc<T>> {
-        throw new Error('Method not implemented.');
-    }
- 
-}
+import { SchemaFieldType, RIDB, type RIDBTypes } from '..';
 
 const storages: (typeof RIDBTypes.BaseStorage<RIDBTypes.SchemaType>|undefined)[] = [
     undefined

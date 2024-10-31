@@ -126,19 +126,23 @@ pub struct Schema {
     /// The indexes defined in the schema, if any.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) indexes: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) required: Option<Vec<String>>,
 }
 
 
 #[wasm_bindgen]
 impl Schema {
     pub fn validate_schema(&self, document: JsValue) -> Result<(), JsValue> {
+        let required = self.required.clone().unwrap_or(Vec::new());
         let properties = self.properties.clone();
+
         for (key, prop) in properties {
             let value = Reflect::get(&document, &JsValue::from_str(&key))
                 .map_err(|e| JsValue::from_str(&format!("Failed to get property '{}': {:?}", key, e)))?;
 
             if value.is_undefined() {
-                if prop.required.unwrap_or(true) == true {
+                if required.contains(&key) {
                     return Err(JsValue::from_str(&format!("Field '{}' is required", key)));
                 }
             } else {
@@ -249,6 +253,11 @@ impl Schema {
     #[wasm_bindgen(getter, js_name="indexes")]
     pub fn get_indexes(&self) -> Option<Vec<String>> {
         self.indexes.clone()
+    }
+
+    #[wasm_bindgen(getter, js_name="required")]
+    pub fn get_required(&self) -> Option<Vec<String>> {
+        self.required.clone()
     }
 
     /// Retrieves the properties of the schema.

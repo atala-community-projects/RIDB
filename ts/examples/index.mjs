@@ -1,11 +1,13 @@
 /// <reference types="@hyperledger/identus-edge-agent-sdk" />
+
+/** @type {SDK} */
 import SDK from '@hyperledger/identus-edge-agent-sdk'
 
-import {
-    RIDB,
-} from '../build/esm/index.mjs';
+import {RIDB} from '../build/esm/index.mjs';
 
-const mediatorDID = "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7y.Vz6Mkhh1e5CEYYq6JBUcTZ6Cp2ranCWRrv7Yax3Le4N59R6dd.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6Imh0dHA6Ly8xOTIuMTY4LjEuNDQ6ODA4MCIsImEiOlsiZGlkY29tbS92MiJdfX0.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6IndzOi8vMTkyLjE2OC4xLjQ0OjgwODAvd3MiLCJhIjpbImRpZGNvbW0vdjIiXX19";
+const mediatorDID = SDK.Domain.DID.fromString(
+ "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7y.Vz6Mkhh1e5CEYYq6JBUcTZ6Cp2ranCWRrv7Yax3Le4N59R6dd.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6Imh0dHA6Ly8xOTIuMTY4LjEuNDQ6ODA4MCIsImEiOlsiZGlkY29tbS92MiJdfX0.SeyJ0IjoiZG0iLCJzIjp7InVyaSI6IndzOi8vMTkyLjE2OC4xLjQ0OjgwODAvd3MiLCJhIjpbImRpZGNvbW0vdjIiXX19"
+);
 
 (async () => {
 
@@ -32,28 +34,28 @@ const mediatorDID = "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7
             this._db = db;
         }
 
-        
-
         async update(name, model) {
             const collection = this.collections[name]
             await collection.update(model)
-            throw new Error("Not implemented")
         }
 
         async delete(name, uuid) {
             const collection = this.collections[name]
-            await collection
+            await collection.remove(uuid)
         }
 
-        async query(name, query) {
+        async query(name, query) {
             const collection = this.collections[name]
             const queryResponse = await collection.find(query.selector)
+            console.log("Find", name, "query", JSON.stringify(query), queryResponse.length, JSON.stringify(queryResponse))
+
             return queryResponse
         }
 
         async insert(name, data) {
             const collection = this.collections[name]
             const queryResponse = await collection.create(data);
+            console.log("Adding ", name, data, "vs", queryResponse)
             return queryResponse
         }
 
@@ -66,25 +68,32 @@ const mediatorDID = "did:peer:2.Ez6LSghwSE437wnDE1pt3X6hVDUQzSjsHzinpX3XFvMjRAm7
         }
     }
 
-    /** @type {SDK.Store} */
-    const store = new RIDBStore();
-
     const apollo = new SDK.Apollo();
     const castor = new SDK.Castor(apollo);
+    const pluto =  new SDK.Pluto(
+        new RIDBStore(),
+        apollo
+    );
+    await pluto.start();
 
-    const pluto = new SDK.Pluto(store, apollo)
-    const defaultSeed = apollo.createRandomSeed().seed;
+    const seed = apollo.createRandomSeed().seed;
+    const agent =  SDK.Agent.initialize(
+        {
+            mediatorDID,
+            apollo,
+            castor,
+            pluto,
+            seed,
+        }
+    );
 
-    const agent = await SDK.Agent.initialize({
-        apollo,
-        castor,
-        mediatorDID,
-        pluto,
-        seed: defaultSeed
-    });
+    agent.addListener(SDK.ListenerKey.MESSAGE, (messages) => {
+        console.log(messages);
+        debugger
+    })
 
     console.log("Starting the database")
+
     await agent.start()
     console.log("Ok :)")
-
 })()

@@ -118,17 +118,16 @@ impl Internals {
         let document = self.ensure_primary_key(document_without_pk)?;
         let properties = self.schema.properties.clone();
 
+        let required = self.schema.required.clone().unwrap_or(Vec::new());
         for (key, prop) in properties {
             let value = Reflect::get(&document, &JsValue::from_str(&key))?;
 
             if value.is_undefined() {
                 // Check if the field is required by safely handling the Option
-                if let Some(is_required) = prop.required {
-                    if is_required {
-                        return Err(JsValue::from(RIDBError::error(
-                            &format!("Field {} is required", key),
-                        )));
-                    }
+                if required.contains(&key) {
+                    return Err(JsValue::from(RIDBError::error(
+                        &format!("Field {} is required", key),
+                    )));
                 }
             } else {
                 if !self.is_type_correct(&value, prop.property_type) {

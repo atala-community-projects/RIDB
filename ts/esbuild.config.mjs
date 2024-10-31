@@ -40,19 +40,26 @@ const generic = {
     assetNames: "[name]",
     entryPoints: ['src/index.ts'],
     sourcemap: false,
+    bundle: true,
+    platform: 'neutral',
+    splitting: false,
     resolveExtensions: ['.ts', '.js', '.wasm'],
-    inject:['ridb-rust'],
+    inject: [],
     mainFields: ['module', 'main'],
+    banner: {
+        js:  "\nif (typeof Buffer === 'undefined') {\n  global.Buffer = require('buffer').Buffer;\n}",
+    },
+    define: {
+        'global.Buffer': 'Buffer',
+    },
+    external: ['buffer']
 }
 
 // Build ES module
 esbuild.build({
     ...generic,
     outfile:"build/esm/index.mjs",
-    splitting: false,
-    platform: 'neutral',
     target: ['esnext'],
-    bundle: true,
     format: 'esm',
     plugins: [
         wasmPlugin,
@@ -61,13 +68,8 @@ esbuild.build({
 }).then(() => {
     esbuild.build({
         ...generic,
-        entryPoints: ['./build/esm/index.mjs'],
         outfile:"build/cjs/index.cjs",
-
-        splitting: false,
-        platform: 'neutral',
         target: ['es6'],
-        bundle: true,
         format: 'cjs',
         plugins: [
             wasmPlugin,
